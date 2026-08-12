@@ -1,0 +1,190 @@
+.vault-action-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+  position: relative;
+}
+
+.vault-watch-later-btn,
+.vault-learning-notes-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  height: 36px;
+  border: none;
+  border-radius: 18px;
+  font: 500 14px/1 Roboto, Arial, sans-serif;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.vault-watch-later-btn {
+  background: #0f0f0f;
+  color: #fff;
+}
+
+.vault-watch-later-btn:hover {
+  background: #272727;
+}
+
+.vault-watch-later-btn:active,
+.vault-learning-notes-btn:active {
+  transform: scale(0.98);
+}
+
+.vault-watch-later-btn.is-saved {
+  background: #065f46;
+}
+
+.vault-watch-later-btn.is-saved:hover {
+  background: #047857;
+}
+
+.vault-watch-later-btn.is-busy,
+.vault-learning-notes-btn.is-busy {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.vault-watch-later-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.vault-watch-later-btn .vault-chevron {
+  width: 14px;
+  height: 14px;
+  opacity: 0.85;
+}
+
+.vault-learning-notes-btn {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.vault-learning-notes-btn:hover {
+  background: #dbeafe;
+}
+
+.vault-learning-notes-btn svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.vault-channel-wrap {
+  margin-left: 8px;
+}
+
+.vault-save-channel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  height: 36px;
+  border: none;
+  border-radius: 18px;
+  font: 500 14px/1 Roboto, Arial, sans-serif;
+  cursor: pointer;
+  background: #2563eb;
+  color: #fff;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.vault-save-channel-btn:hover {
+  background: #1d4ed8;
+}
+
+.vault-save-channel-btn:active {
+  transform: scale(0.98);
+}
+
+.vault-save-channel-btn.is-saved {
+  background: #065f46;
+}
+
+.vault-save-channel-btn.is-saved:hover {
+  background: #047857;
+}
+
+.vault-save-channel-btn.is-busy {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.vault-save-channel-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.vault-category-picker {
+  position: fixed;
+  z-index: 2147483646;
+  min-width: 220px;
+  max-width: 280px;
+  max-height: 360px;
+  overflow: auto;
+  padding: 10px;
+  border-radius: 14px;
+  background: #212121;
+  color: #f1f1f1;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font: 500 13px/1.3 Roboto, Arial, sans-serif;
+}
+
+.vault-category-picker-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.vault-category-picker-hint {
+  margin-top: 2px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 400;
+  color: #aaa;
+}
+
+.vault-category-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vault-category-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #f1f1f1;
+  font: 500 13px/1 Roboto, Arial, sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vault-category-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.vault-category-option.is-preferred {
+  background: rgba(139, 92, 246, 0.18);
+}
+
+.vault-category-preferred {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: #c4b5fd;
+}

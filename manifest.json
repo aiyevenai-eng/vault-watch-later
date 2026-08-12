@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Vault Watch Later",
+  "version": "1.7.0",
+  "description": "Save Watch Later videos and YouTube channels to Vault / Trading Journal.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://youtube.com/*",
+    "https://vault-web-production-e80f.up.railway.app/*",
+    "http://localhost:4321/*",
+    "http://127.0.0.1:4321/*",
+    "http://localhost:3000/*",
+    "http://127.0.0.1:3000/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*",
+        "https://youtube.com/*"
+      ],
+      "js": ["config.js", "content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
