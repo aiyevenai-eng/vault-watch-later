@@ -1,6 +1,39 @@
 ;(function () {
   const API_BASE = globalThis.VAULT_API_BASE || 'http://127.0.0.1:4321'
   const TRADING_JOURNAL_BASE = globalThis.TRADING_JOURNAL_BASE || 'http://localhost:3000'
+
+  function extFetch(url, options = {}) {
+    const nativeFetch = globalThis.fetch.bind(globalThis)
+    return new Promise((resolve, reject) => {
+      if (typeof chrome === 'undefined' || !chrome.runtime?.sendMessage) {
+        nativeFetch(url, options).then(resolve).catch(reject)
+        return
+      }
+      chrome.runtime.sendMessage(
+        {
+          type: 'VAULT_FETCH',
+          url,
+          options: {
+            method: options.method || 'GET',
+            headers: options.headers || {},
+            body: options.body,
+          },
+        },
+        (res) => {
+          if (chrome.runtime.lastError) {
+            nativeFetch(url, options).then(resolve).catch(reject)
+            return
+          }
+          resolve({
+            ok: Boolean(res?.ok),
+            status: res?.status || 0,
+            json: async () => res?.json,
+            text: async () => res?.text || '',
+          })
+        },
+      )
+    })
+  }
   const WRAP_ID = 'vault-watch-later-wrap'
   const BUTTON_ID = 'vault-watch-later-button'
   const NOTES_BUTTON_ID = 'vault-learning-notes-button'
@@ -37,7 +70,7 @@
       const normalized = String(base || '').replace(/\/$/, '')
       if (!normalized || seen.has(normalized)) continue
       seen.add(normalized)
-      fetch(`${normalized}/api/learning/watch-later/notify`, { method: 'POST', keepalive: true }).catch(() => {})
+      extFetch(`${normalized}/api/learning/watch-later/notify`, { method: 'POST', keepalive: true }).catch(() => {})
     }
   }
 
@@ -114,13 +147,12 @@
       thumbnail: videoId ? readThumbnail(videoId) : '',
       source: 'MANUAL',
     })
-    // One-hop server redirect — skips the client import page.
-    return `${TRADING_JOURNAL_BASE}/learning/open?${params.toString()}`
+    return `${TRADING_JOURNAL_BASE}/learning/import?${params.toString()}`
   }
 
   async function syncWatchLaterStatus(videoId, status) {
     try {
-      await fetch(`${API_BASE}/api/watch-later/by-youtube/${encodeURIComponent(videoId)}`, {
+      await extFetch(`${API_BASE}/api/watch-later/by-youtube/${encodeURIComponent(videoId)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
@@ -256,7 +288,7 @@
 
   async function loadCategories() {
     try {
-      const res = await fetch(`${API_BASE}/api/watch-later/settings`)
+      const res = await extFetch(`${API_BASE}/api/watch-later/settings`)
       if (!res.ok) return
       const data = await res.json()
       if (Array.isArray(data.categories) && data.categories.length > 0) {
@@ -269,7 +301,7 @@
 
   async function loadSavedIds() {
     try {
-      const res = await fetch(`${API_BASE}/api/watch-later`)
+      const res = await extFetch(`${API_BASE}/api/watch-later`)
       if (!res.ok) return
       const data = await res.json()
       savedIds.clear()
@@ -475,12 +507,12 @@
 
   async function pinItemToTop(itemId) {
     if (!itemId) return
-    const listRes = await fetch(`${API_BASE}/api/watch-later`)
+    const listRes = await extFetch(`${API_BASE}/api/watch-later`)
     if (!listRes.ok) throw new Error(`HTTP ${listRes.status}`)
     const data = await listRes.json()
     const ids = (data.items || []).map((item) => item.id).filter(Boolean)
     const nextOrder = [itemId, ...ids.filter((id) => id !== itemId)]
-    const reorderRes = await fetch(`${API_BASE}/api/watch-later/reorder`, {
+    const reorderRes = await extFetch(`${API_BASE}/api/watch-later/reorder`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ order: nextOrder }),
@@ -501,7 +533,7 @@
     renderButton()
 
     try {
-      const res = await fetch(`${API_BASE}/api/watch-later`, {
+      const res = await extFetch(`${API_BASE}/api/watch-later`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -520,7 +552,7 @@
 
       // Production may still ignore category on POST — force it with PATCH.
       if (itemId && String(item?.category || '').trim() !== category) {
-        const patchRes = await fetch(`${API_BASE}/api/watch-later/${encodeURIComponent(itemId)}`, {
+        const patchRes = await extFetch(`${API_BASE}/api/watch-later/${encodeURIComponent(itemId)}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ category }),
@@ -573,7 +605,7 @@
     renderButton()
 
     try {
-      let res = await fetch(`${API_BASE}/api/watch-later/by-youtube/${encodeURIComponent(videoId)}`, {
+      let res = await extFetch(`${API_BASE}/api/watch-later/by-youtube/${encodeURIComponent(videoId)}`, {
         method: 'DELETE',
       })
       if (res.status === 404) {
@@ -581,7 +613,7 @@
       } else if (!res.ok) {
         let itemId = previousItemId
         if (!itemId) {
-          const listRes = await fetch(`${API_BASE}/api/watch-later`)
+          const listRes = await extFetch(`${API_BASE}/api/watch-later`)
           if (!listRes.ok) throw new Error(`HTTP ${listRes.status}`)
           const data = await listRes.json()
           itemId = (data.items || []).find((item) => item.youtubeId === videoId)?.id
@@ -589,7 +621,7 @@
         if (!itemId) {
           notifyTradingJournalRefresh()
         } else {
-          res = await fetch(`${API_BASE}/api/watch-later/${encodeURIComponent(itemId)}`, { method: 'DELETE' })
+          res = await extFetch(`${API_BASE}/api/watch-later/${encodeURIComponent(itemId)}`, { method: 'DELETE' })
           if (!res.ok && res.status !== 404) throw new Error(`HTTP ${res.status}`)
           notifyTradingJournalRefresh()
         }
@@ -796,7 +828,7 @@
       return
     }
     try {
-      const res = await fetch(
+      const res = await extFetch(
         `${TRADING_JOURNAL_BASE}/api/learning/youtubers/by-handle/${encodeURIComponent(handle)}`,
         { cache: 'no-store' },
       )
@@ -815,7 +847,7 @@
       const normalized = String(base || '').replace(/\/$/, '')
       if (!normalized || seen.has(normalized)) continue
       seen.add(normalized)
-      fetch(`${normalized}/api/learning/youtubers/notify`, { method: 'POST', keepalive: true }).catch(() => {})
+      extFetch(`${normalized}/api/learning/youtubers/notify`, { method: 'POST', keepalive: true }).catch(() => {})
     }
   }
 
@@ -880,7 +912,7 @@
     renderChannelButton()
 
     try {
-      const res = await fetch(`${TRADING_JOURNAL_BASE}/api/learning/youtubers/save`, {
+      const res = await extFetch(`${TRADING_JOURNAL_BASE}/api/learning/youtubers/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

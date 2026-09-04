@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vault Watch Later</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <p class="kicker">Vault Watch Later</p>
+      <h1>保存到 Trading Journal</h1>
+      <p id="status" class="status">正在检测本机网站…</p>
+      <div class="actions">
+        <button id="open-learning" type="button">打开视频学习</button>
+        <button id="open-watch-later" class="ghost" type="button">打开 Watch Later</button>
+      </div>
+      <ol>
+        <li>先让 Trading Journal 在 <code>http://localhost:3000</code> 跑起来</li>
+        <li>打开任意 YouTube 视频</li>
+        <li>点「Watch Later」保存，或点「写笔记」进入图二那个学习页</li>
+      </ol>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

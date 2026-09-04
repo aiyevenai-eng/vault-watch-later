@@ -1,8 +1,27 @@
 {
   "manifest_version": 3,
   "name": "Vault Watch Later",
-  "version": "1.7.0",
-  "description": "Save Watch Later videos and YouTube channels to Vault / Trading Journal.",
+  "version": "1.9.3",
+  "description": "Save YouTube videos to Vault, Trading Journal, LUMIÈRE, or MEME LAB.",
+  "minimum_chrome_version": "116",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Vault Watch Later",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
   "permissions": ["storage"],
   "host_permissions": [
     "https://www.youtube.com/*",
@@ -15,10 +34,7 @@
   ],
   "content_scripts": [
     {
-      "matches": [
-        "https://www.youtube.com/*",
-        "https://youtube.com/*"
-      ],
+      "matches": ["https://www.youtube.com/*", "https://youtube.com/*"],
       "js": ["config.js", "content.js"],
       "css": ["styles.css"],
       "run_at": "document_idle"
