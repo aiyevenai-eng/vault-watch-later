@@ -2,7 +2,7 @@
 
 YouTube 上保存视频到本机 **Trading Journal**（`http://localhost:3000`）的 Chrome 插件。
 
-- **Watch Later**：写入待看队列
+- **Watch Later**：直接写入本机 Trading Journal 的「待看视频」页
 - **写笔记**：打开 Trading Journal 的视频学习页（就是图二那个网站）
 - **收藏频道**：保存 YouTuber 到 Trading Journal（若网站已提供该接口）
 

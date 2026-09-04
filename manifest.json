@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Vault Watch Later",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "description": "Save YouTube videos to Vault, Trading Journal, LUMIÈRE, or MEME LAB.",
   "minimum_chrome_version": "116",
   "icons": {

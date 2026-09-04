@@ -152,7 +152,7 @@
 
   async function syncWatchLaterStatus(videoId, status) {
     try {
-      await extFetch(`${API_BASE}/api/watch-later/by-youtube/${encodeURIComponent(videoId)}`, {
+      await extFetch(`${TRADING_JOURNAL_BASE}/api/learning/watch-later/by-youtube/${encodeURIComponent(videoId)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
@@ -288,11 +288,14 @@
 
   async function loadCategories() {
     try {
-      const res = await extFetch(`${API_BASE}/api/watch-later/settings`)
+      const res = await extFetch(`${TRADING_JOURNAL_BASE}/api/learning/watch-later`)
       if (!res.ok) return
       const data = await res.json()
-      if (Array.isArray(data.categories) && data.categories.length > 0) {
-        categories = data.categories.map((entry) => String(entry).trim()).filter(Boolean)
+      const fromItems = (data.items || [])
+        .map((item) => String(item.category || '').trim())
+        .filter(Boolean)
+      if (fromItems.length > 0) {
+        categories = [...new Set([...FALLBACK_CATEGORIES, ...fromItems])]
       }
     } catch {
       // keep fallback
@@ -301,7 +304,7 @@
 
   async function loadSavedIds() {
     try {
-      const res = await extFetch(`${API_BASE}/api/watch-later`)
+      const res = await extFetch(`${TRADING_JOURNAL_BASE}/api/learning/watch-later`)
       if (!res.ok) return
       const data = await res.json()
       savedIds.clear()
@@ -507,12 +510,12 @@
 
   async function pinItemToTop(itemId) {
     if (!itemId) return
-    const listRes = await extFetch(`${API_BASE}/api/watch-later`)
+    const listRes = await extFetch(`${TRADING_JOURNAL_BASE}/api/learning/watch-later`)
     if (!listRes.ok) throw new Error(`HTTP ${listRes.status}`)
     const data = await listRes.json()
     const ids = (data.items || []).map((item) => item.id).filter(Boolean)
     const nextOrder = [itemId, ...ids.filter((id) => id !== itemId)]
-    const reorderRes = await extFetch(`${API_BASE}/api/watch-later/reorder`, {
+    const reorderRes = await extFetch(`${TRADING_JOURNAL_BASE}/api/learning/watch-later/reorder`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ order: nextOrder }),
@@ -527,46 +530,29 @@
     persistLastCategory(category)
     busy = true
     lastRenderKey = ''
-    // Optimistic: show saved state immediately with chosen category.
     savedIds.add(videoId)
     savedCategories.set(videoId, category)
     renderButton()
 
     try {
-      const res = await extFetch(`${API_BASE}/api/watch-later`, {
+      const payload = {
+        youtubeId: videoId,
+        title: readTitle(),
+        channel: readChannel(),
+        thumbnail: readThumbnail(videoId),
+        url: location.href.split('&')[0],
+        category,
+      }
+      const res = await extFetch(`${TRADING_JOURNAL_BASE}/api/learning/watch-later`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          youtubeId: videoId,
-          title: readTitle(),
-          channel: readChannel(),
-          thumbnail: readThumbnail(videoId),
-          url: location.href.split('&')[0],
-          category,
-        }),
+        body: JSON.stringify(payload),
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json().catch(() => null)
-      let item = data?.item || null
-      let itemId = item?.id || null
-
-      // Production may still ignore category on POST — force it with PATCH.
-      if (itemId && String(item?.category || '').trim() !== category) {
-        const patchRes = await extFetch(`${API_BASE}/api/watch-later/${encodeURIComponent(itemId)}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ category }),
-        })
-        if (patchRes.ok) {
-          const patched = await patchRes.json().catch(() => null)
-          if (patched?.item) item = patched.item
-        }
-      }
-
-      // Always pin newly saved video to the top, even if the server still appends to bottom.
-      if (itemId) {
-        await pinItemToTop(itemId)
-      }
+      const item = data?.item || null
+      const itemId = item?.id || null
+      if (itemId) await pinItemToTop(itemId)
 
       const savedCategory = item?.category || category
       savedCategories.set(videoId, savedCategory)
@@ -577,7 +563,7 @@
       savedIds.delete(videoId)
       savedCategories.delete(videoId)
       savedItemIds.delete(videoId)
-      alert('Could not save to Vault. Check your internet connection and try again.')
+      alert('无法保存到 Trading Journal。请确认网站已在 http://localhost:3000 运行，然后重试。')
     } finally {
       busy = false
       lastRenderKey = ''
@@ -605,15 +591,16 @@
     renderButton()
 
     try {
-      let res = await extFetch(`${API_BASE}/api/watch-later/by-youtube/${encodeURIComponent(videoId)}`, {
-        method: 'DELETE',
-      })
+      let res = await extFetch(
+        `${TRADING_JOURNAL_BASE}/api/learning/watch-later/by-youtube/${encodeURIComponent(videoId)}`,
+        { method: 'DELETE' },
+      )
       if (res.status === 404) {
         notifyTradingJournalRefresh()
       } else if (!res.ok) {
         let itemId = previousItemId
         if (!itemId) {
-          const listRes = await extFetch(`${API_BASE}/api/watch-later`)
+          const listRes = await extFetch(`${TRADING_JOURNAL_BASE}/api/learning/watch-later`)
           if (!listRes.ok) throw new Error(`HTTP ${listRes.status}`)
           const data = await listRes.json()
           itemId = (data.items || []).find((item) => item.youtubeId === videoId)?.id
@@ -621,7 +608,9 @@
         if (!itemId) {
           notifyTradingJournalRefresh()
         } else {
-          res = await extFetch(`${API_BASE}/api/watch-later/${encodeURIComponent(itemId)}`, { method: 'DELETE' })
+          res = await extFetch(`${TRADING_JOURNAL_BASE}/api/learning/watch-later/${encodeURIComponent(itemId)}`, {
+            method: 'DELETE',
+          })
           if (!res.ok && res.status !== 404) throw new Error(`HTTP ${res.status}`)
           notifyTradingJournalRefresh()
         }
@@ -633,7 +622,7 @@
       savedIds.add(videoId)
       if (previousCategory) savedCategories.set(videoId, previousCategory)
       if (previousItemId) savedItemIds.set(videoId, previousItemId)
-      alert('Could not remove from Vault. Check your internet connection and try again.')
+      alert('无法从 Trading Journal 移除。请确认网站已在运行后重试。')
     } finally {
       busy = false
       lastRenderKey = ''
